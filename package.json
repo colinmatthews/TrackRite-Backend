@@ -10,6 +10,8 @@
   },
   "scripts": {
     "start": "node app.js",
+    "deploy-prod":"gcloud app deploy",
+    "deploy-test":"gcloud app deploy --no-promote --version test",
     "test": "mocha --exit test/*.test.js"
   },
   "dependencies": {
