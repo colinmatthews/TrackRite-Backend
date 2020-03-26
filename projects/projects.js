@@ -18,7 +18,7 @@ router
       res.send(keys)
     }
     catch(err){
-      console.log(err)
+      //console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -33,7 +33,7 @@ router
       res.send(projects)
     }
     catch(err){
-      console.log(err)
+      //console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -50,7 +50,7 @@ router
       res.send(keys)
     }
     catch(err){
-      console.log(err)
+      //console.log(err)
       res.status(500).send('Internal server error')
     }
     
@@ -66,7 +66,7 @@ router
       res.send(projects)
     }
     catch(err){
-      console.log(err)
+      //console.log(err)
       res.status(500).send('Internal server error')
     }
     
@@ -83,10 +83,24 @@ router
       res.send(keys)
     }
     catch(err){
-      console.log(err)
+      //console.log(err)
       res.status(500).send('Internal server error')
     }
   })
+
+  .post('/numericID', async(req,res) => {
+    try{
+      let numericID = req.body
+      const [project] = await datastore.createQuery('Project').filter('__key__','=',datastore.key(['Project', numericID]));
+      res.send(project)
+    }
+    catch(err){
+      //console.log(err)
+      res.status(500).send('Internal server error')
+    }
+  })
+
+
   // By query parameter key
   .post('/children', async (req,res) => {
     try{
@@ -109,7 +123,7 @@ router
       res.send(return_data)
     }
     catch(err){
-      console.log(err)
+      //console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -129,7 +143,35 @@ router
 
     }
     catch(err){
-      console.log(err)
+      //console.log(err)
+      res.status(500).send('Internal server error')
+    }
+  })
+
+  .put('/', async (req,res) => {
+    try{
+      let path = req.body.key.path
+      let project = req.body
+
+      let formatted_path = [] // Parse string of project or task number 
+      path.forEach(el => {
+        if (!isNaN(el)){ // if element is a number
+          el = parseInt(el)
+        }
+        formatted_path.push(el)
+      })
+
+      let key = datastore.key(formatted_path)
+      delete project['key']
+
+      const entity = {key: key, data:project}
+
+      //console.log(entity)
+      await datastore.update(entity);
+      res.sendStatus(200)
+    }
+    catch(err){
+      //console.log(err)
       res.status(500).send('Internal server error')
     }
   })

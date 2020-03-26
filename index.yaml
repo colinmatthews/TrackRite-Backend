@@ -1,0 +1,6 @@
+indexes:
+# For bar chart
+- kind: Task
+  ancestor: yes
+  properties:
+  - name: end_date

@@ -14,11 +14,11 @@ router
       users.forEach(el => {
         el.key = el[datastore.KEY]
       })
-      console.log(users)
+      //console.log(users)
       res.send(users)
     }
     catch(err){
-      console.log(err)
+      //console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -26,17 +26,17 @@ router
   .get('/uid', async (req,res) =>{
     try{
       let uid = req.user.uid
-      console.log(uid)
+      //console.log(uid)
       const query = datastore.createQuery('User').filter('uid','=',uid)
       const [users] = await datastore.runQuery(query);
       users.forEach(el => {
         el.key = el[datastore.KEY]
       })
-      console.log(users)
+      //console.log(users)
       res.send(users)
     }
     catch(err){
-      console.log(err)
+      //console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -50,7 +50,7 @@ router
       await datastore.upsert(entity)
     }
     catch(err){
-      console.log(err)
+      //console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -58,11 +58,11 @@ router
   .put('/', async (req,res) =>{
    
       try{
-        console.log(req.body)
+        //console.log(req.body)
         let path = req.body.key.path
         let user = req.body.data
 
-        console.log(req.body)
+        //console.log(req.body)
 
         let formatted_path = [] // Parse string of project or task number 
         path.forEach(el => {
@@ -81,9 +81,10 @@ router
         }
 
         await datastore.update(entity)
+        res.send(200)
       }
       catch(err){
-        console.log(err)
+        //console.log(err)
         res.status(500).send('Internal server error')
       }
     })

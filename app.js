@@ -17,7 +17,14 @@
 // [START gae_node_request_example]
 const express = require('express');
 const cookieParser = require('cookie-parser')();
-const cors = require('cors')({credentials: true, origin: true});
+const cors = require('cors');
+const corsOptions = {
+    origin: 'http://localhost:8080',
+    methods: ['GET','POST','PUT','DELETE'],
+    allowedHeaders: ['Origin','X-Requested-With','contentType','Content-Type','Accept','Authorization'],
+    credentials: true,
+    optionsSuccessStatus: 200
+}
 var admin = require('firebase-admin');
 admin.initializeApp({
   credential: admin.credential.cert('trackrite-218deb87e9a8.json')
@@ -26,7 +33,7 @@ admin.initializeApp({
 
 
 const app = express();
-
+app.use(cors(corsOptions));
 
 const validateFirebaseIdToken = async (req, res, next) => {
   //console.log('Check if request is authorized with Firebase ID token');
@@ -69,7 +76,7 @@ const validateFirebaseIdToken = async (req, res, next) => {
   }
 };
 
-app.use(cors);
+
 app.use(cookieParser);
 app.use(validateFirebaseIdToken);
 app.use(express.json());
@@ -85,9 +92,11 @@ app.listen(PORT, () => {
 let projectsRoutes = require("./projects/projects.js")
 let taskRoutes = require("./tasks/tasks.js")
 let userRoutes = require("./users/users.js")
+let dashboardRoutes = require("./dashboard/dashboard.js")
 
 app.use('/projects',projectsRoutes)
 app.use('/tasks',taskRoutes)
 app.use('/users',userRoutes)
+app.use('/dashboard',dashboardRoutes)
 
 module.exports = app;
