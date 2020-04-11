@@ -65,25 +65,6 @@ router
       }
       
       res.send(return_data)
-      /*console.log(children)console.log(children)
-     
-     
-      
-      let counter = 0
-
-      // Count duplicates of status values for children
-      taskStatus.forEach(el => {
-        if(el in returnData){
-          counter = returnData[el]
-        }
-        else{
-          counter = 0
-        }
-        counter ++;
-        returnData[el] = counter
-      })
-      */
-
       
     }
     catch(err){

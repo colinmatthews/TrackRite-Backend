@@ -18,7 +18,7 @@ router
       res.send(keys)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -33,7 +33,7 @@ router
       res.send(projects)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -50,7 +50,7 @@ router
       res.send(keys)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
     
@@ -66,7 +66,7 @@ router
       res.send(projects)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
     
@@ -83,7 +83,7 @@ router
       res.send(keys)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -95,7 +95,7 @@ router
       res.send(project)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -109,21 +109,24 @@ router
       const [tasks] = await datastore.runQuery(query);
       let return_data = []
       
-      tasks.forEach(el => {
+      for(el of tasks){
         
         let temp = {}
         if(el[datastore.KEY].path.length == ancestorKey.path.length + 2){  // is a direct child as key is two (entity type, value) elements longer than parent key
           temp = el
           temp.key = el[datastore.KEY]
 
+          let urlSafeKey = await datastore.keyToLegacyUrlSafe(temp.key)
+          temp.urlSafeKey = urlSafeKey[0]
+
           return_data.push(temp)
         } 
-      })
+      }
 
       res.send(return_data)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -143,7 +146,7 @@ router
 
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -166,12 +169,12 @@ router
 
       const entity = {key: key, data:project}
 
-      //console.log(entity)
+      console.log(entity)
       await datastore.update(entity);
       res.sendStatus(200)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })

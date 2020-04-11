@@ -17,7 +17,7 @@ router
       res.send(tasks)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -33,7 +33,7 @@ router
       res.send(tasks)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -60,38 +60,36 @@ router
   .post('/key', async (req,res) =>{
     try{
       let key =  req.body
-      const [task] = await datastore.get(key).filter('users', '=', req.user.uid);
-      task.forEach(el => {
-        el.key = el[datastore.KEY]
-      })
+      const [task] = await datastore.get(key);
+      task.key =  task[datastore.KEY]
+
+      let urlSafeKey = await datastore.keyToLegacyUrlSafe(task.key)
+      task.urlSafeKey = urlSafeKey[0]
+      
       res.send(task)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
 
-  .post('/numericID', async(req,res) => {
+  .post('/urlSafeKey',async (req,res) => {
     try{
-      let numericID = req.body
-      const [task] = await datastore.createQuery('Task').filter('__key__','=',datastore.key(['Task', numericID]));
-      res.send(task)
-    }
-    catch(err){
-      //console.log(err)
-      res.status(500).send('Internal server error')
-    }
-  })
+      let tid = req.body.tid
+      
+      let validKey = datastore.keyFromLegacyUrlsafe(tid)
+      
+      const [task] = await datastore.get(validKey);
+      task.key = task[datastore.KEY]
 
-  .post('/numericIDwithTitles', async(req,res) => {
-    try{
-      let numericID = req.body
-      const [task] = await datastore.createQuery('Task').filter('__key__','=',datastore.key(['Task', numericID]));
+      let urlSafeKey = await datastore.keyToLegacyUrlSafe(task.key)
+      task.urlSafeKey = urlSafeKey[0]
+
       res.send(task)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -105,7 +103,7 @@ router
       res.send(tasks)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -114,26 +112,30 @@ router
   .post('/children',async (req,res) => {
     try{
       let ancestorKey =  req.body
-      //console.log(ancestorKey)
       const query = datastore.createQuery('Task').hasAncestor(ancestorKey).filter('users', '=', req.user.uid);
       const [tasks] = await datastore.runQuery(query);
       let return_data = []
       
-      tasks.forEach(el => {
+      for (const el of tasks){
         
         let temp = {}
         if(el[datastore.KEY].path.length == ancestorKey.path.length + 2){  // is a direct child as key is two (entity type, value) elements longer than parent key
           temp = el
           temp.key = el[datastore.KEY]
 
+          let urlSafeKey = await datastore.keyToLegacyUrlSafe(temp.key)
+          temp.urlSafeKey = urlSafeKey[0]
+         
           return_data.push(temp)
+
         } 
-      })
+      }
+      
       
       res.send(return_data)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -154,11 +156,13 @@ router
       res.send(returnTasks)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
 
+  // Not used, not tested
+  /* 
   .post('/batch', async (req,res) =>{
     try{
       let keys = req.body
@@ -169,9 +173,85 @@ router
       res.send(tasks)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
+  })
+  */
+
+  .post('/breadcrumbsByKey', async(req,res) => {
+    try{
+      //Get task by key
+      let ancestorKey = req.body
+      let path = ancestorKey.path // [Project, '12456', Task, '124566']
+  
+      let formatted_path = [] // [Project, 12456, Task, 124566]
+      let keys = []           //[[Project, 123456], [Task,124566]]
+      let breadcrumbs = []
+      let crumb = {}
+      
+
+
+      path.forEach(el => {
+        if (!isNaN(el)){ 
+          el = parseInt(el)
+        }
+        formatted_path.push(el)
+      })
+     
+      
+      for( let i = 0; i < formatted_path.length; i += 2){
+        keys.push(formatted_path.slice(i, i + 2))
+      }
+
+    
+      // Builds each key in the path 
+      // First iteration will be [Project, 12456]
+      // Second iteration will be [Project, 12456, Task, 124566]
+      for( let j = 0; j < keys.length ; j ++){
+        let temp = []
+        for( let n = 0; n <= j; n ++ ){
+          temp.push(keys[n][0])
+          temp.push(keys[n][1])
+        }
+
+        if(temp.length == 2 ){ // Project selected 
+          let project = {}
+          project.title = "Home"
+          project.key = {path:[1,2,3,4],id:1234} /* Front end logic uses path length to determine if breadcrumb click fetches task children or project children
+                                                    Path of length 4 indicates front end should fetch project children - the content of the path isnt used */
+          crumb = {
+            key:project.key,
+            title:project.title,
+            tr:project
+          }
+
+        }
+        else{
+          const taskKey = datastore.key(temp)
+          let [task] = await datastore.get(taskKey)
+
+          task.key = task[datastore.KEY]
+          let urlSafeKey = await datastore.keyToLegacyUrlSafe(task.key)
+          task.urlSafeKey = urlSafeKey[0]
+
+          crumb = {
+            key:task.key,
+            title:task.title,
+            tr:task
+          }
+
+        }
+        breadcrumbs.push(crumb)
+      }
+      res.send(breadcrumbs)
+    
+    }
+    catch(err){
+      console.log(err)
+      res.status(500).send('Internal server error')
+    }
+
   })
 
   .post('/', async (req,res) => {
@@ -210,7 +290,7 @@ router
 
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -279,7 +359,6 @@ router
 
   .delete('/batch', async(req,res) => {
     try{
-      console.log(req.body)
       let tasks = req.body.tasks
       let entities = []
 

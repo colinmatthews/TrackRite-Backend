@@ -18,7 +18,7 @@ router
       res.send(users)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -36,7 +36,7 @@ router
       res.send(users)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -50,7 +50,7 @@ router
       await datastore.upsert(entity)
     }
     catch(err){
-      //console.log(err)
+      console.log(err)
       res.status(500).send('Internal server error')
     }
   })
@@ -84,7 +84,7 @@ router
         res.send(200)
       }
       catch(err){
-        //console.log(err)
+        console.log(err)
         res.status(500).send('Internal server error')
       }
     })

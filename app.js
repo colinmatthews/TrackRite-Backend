@@ -18,8 +18,16 @@
 const express = require('express');
 const cookieParser = require('cookie-parser')();
 const cors = require('cors');
+
+let whitelist = ['http://localhost:8080','https://staging.trackrite.ca']
 const corsOptions = {
-    origin: 'http://localhost:8080',
+    origin: function (origin, callback) {
+      if (whitelist.indexOf(origin) !== -1) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
     methods: ['GET','POST','PUT','DELETE'],
     allowedHeaders: ['Origin','X-Requested-With','contentType','Content-Type','Accept','Authorization'],
     credentials: true,
