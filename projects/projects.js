@@ -133,16 +133,47 @@ router
 
   .post('/', async (req,res) => {
     try{
-      const project = {
-        private: req.body.private,
-        start_date: req.body.start_date,
-        title:req.body.title,
-        users:req.body.users
-      }
-      const key = datastore.key(req.body.key)
+      
+      const project = [
+        {
+          name:'thumbnail',
+          value:req.body.thumbnail,
+          excludeFromIndexes:true
+        },
+        {
+          name:"description",
+          value:req.body.description,
+        },
+        {
+          name:"end_date",
+          value:req.body.end_date,
+        },
+        {
+          name:"start_date",
+          value:req.body.start_date,
+        },
+        {
+          name:"private",
+          value:req.body.private,
+        },
+        {
+          name:"owners",
+          value:req.body.owners,
+        },
+        {
+          name:"users",
+          value:req.body.users
+        },
+        {
+          name:"title",
+          value:req.body.title
+        }
+      ]
+      const key = datastore.key('Project')
       const entity = {key: key, data: project}
 
       await datastore.upsert(entity)
+      res.status(200)
 
     }
     catch(err){
@@ -154,7 +185,41 @@ router
   .put('/', async (req,res) => {
     try{
       let path = req.body.key.path
-      let project = req.body
+      const project = [
+        {
+          name:'thumbnail',
+          value:req.body.thumbnail,
+          excludeFromIndexes:true
+        },
+        {
+          name:"description",
+          value:req.body.description,
+        },
+        {
+          name:"end_date",
+          value:req.body.end_date,
+        },
+        {
+          name:"start_date",
+          value:req.body.start_date,
+        },
+        {
+          name:"private",
+          value:req.body.private,
+        },
+        {
+          name:"owners",
+          value:req.body.owners,
+        },
+        {
+          name:"users",
+          value:req.body.users
+        },
+        {
+          name:"title",
+          value:req.body.title
+        }
+      ]
 
       let formatted_path = [] // Parse string of project or task number 
       path.forEach(el => {
