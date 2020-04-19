@@ -182,16 +182,15 @@ router
   .post('/breadcrumbsByKey', async(req,res) => {
     try{
       //Get task by key
-      let ancestorKey = req.body
-      let path = ancestorKey.path // [Project, '12456', Task, '124566']
+      let path = req.body.path //['Team','1234',Project,'12456','Task','124566]
   
-      let formatted_path = [] // [Project, 12456, Task, 124566]
-      let keys = []           //[[Project, 123456], [Task,124566]]
+      let formatted_path = []
+      let keys = []           
       let breadcrumbs = []
       let crumb = {}
       
 
-
+      // [Team,1234,Project, 12456, Task, 124566]
       path.forEach(el => {
         if (!isNaN(el)){ 
           el = parseInt(el)
@@ -199,15 +198,16 @@ router
         formatted_path.push(el)
       })
      
-      
+       //[[Team,1234],[Project, 123456], [Task,124566]]
       for( let i = 0; i < formatted_path.length; i += 2){
         keys.push(formatted_path.slice(i, i + 2))
       }
-
+    
     
       // Builds each key in the path 
-      // First iteration will be [Project, 12456]
-      // Second iteration will be [Project, 12456, Task, 124566]
+      // First iteration will be [Team,1234]
+      // Second iteration will be [Team,1234, Project, 12456,]
+      // Third iteration will be [Team,1234, Project, 12456, Task, 124566] 
       for( let j = 0; j < keys.length ; j ++){
         let temp = []
         for( let n = 0; n <= j; n ++ ){
@@ -215,34 +215,40 @@ router
           temp.push(keys[n][1])
         }
 
-        if(temp.length == 2 ){ // Project selected 
-          let project = {}
-          project.title = "Home"
-          project.key = {path:[1,2,3,4],id:1234} /* Front end logic uses path length to determine if breadcrumb click fetches task children or project children
-                                                    Path of length 4 indicates front end should fetch project children - the content of the path isnt used */
-          crumb = {
-            key:project.key,
-            title:project.title,
-            tr:project
-          }
-
+        if(temp.length == 2){ // Team selected
+         
         }
         else{
-          const taskKey = datastore.key(temp)
-          let [task] = await datastore.get(taskKey)
+          if(temp.length == 4 ){ // Project selected 
+            let project = {}
+            project.title = "Home"
+            project.key = {path:[1,2,3,4,5,6],id:1234} /* Front end logic uses path length to determine if breadcrumb click fetches task children or project children
+                                                      Path of length 4 indicates front end should fetch project children - the content of the path isnt used */
+            crumb = {
+              key:project.key,
+              title:project.title,
+              tr:project
+            }
 
-          task.key = task[datastore.KEY]
-          let urlSafeKey = await datastore.keyToLegacyUrlSafe(task.key)
-          task.urlSafeKey = urlSafeKey[0]
-
-          crumb = {
-            key:task.key,
-            title:task.title,
-            tr:task
           }
+          else{
+            const taskKey = datastore.key(temp)
+            let [task] = await datastore.get(taskKey)
 
+            task.key = task[datastore.KEY]
+            let urlSafeKey = await datastore.keyToLegacyUrlSafe(task.key)
+            task.urlSafeKey = urlSafeKey[0]
+
+            crumb = {
+              key:task.key,
+              title:task.title,
+              tr:task
+            }
+
+          }
+         
+          breadcrumbs.push(crumb)
         }
-        breadcrumbs.push(crumb)
       }
       res.send(breadcrumbs)
     

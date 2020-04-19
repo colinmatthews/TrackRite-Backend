@@ -19,7 +19,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser')();
 const cors = require('cors');
 
-let whitelist = ['http://localhost:8080','https://staging.trackrite.ca']
+let whitelist = ['http://localhost:8080','http://staging.trackrite.ca']
 const corsOptions = {
     origin: function (origin, callback) {
       if (whitelist.indexOf(origin) !== -1) {
@@ -101,10 +101,12 @@ let projectsRoutes = require("./projects/projects.js")
 let taskRoutes = require("./tasks/tasks.js")
 let userRoutes = require("./users/users.js")
 let dashboardRoutes = require("./dashboard/dashboard.js")
+let teamsRoutes = require('./teams/teams.js')
 
 app.use('/projects',projectsRoutes)
 app.use('/tasks',taskRoutes)
 app.use('/users',userRoutes)
 app.use('/dashboard',dashboardRoutes)
+app.use('/teams',teamsRoutes)
 
 module.exports = app;

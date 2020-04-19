@@ -25,7 +25,8 @@ router
 
   .get('/private', async (req,res) =>{
     try{
-      const query = datastore.createQuery('Project').filter('users', '=', req.user.uid)
+      console.log(req.user.uid)
+      const query = datastore.createQuery('Project').filter('private', '=', true).filter('users', '=', req.user.uid)
       const [projects] = await datastore.runQuery(query);
       projects.forEach(el => {
         el.key = el[datastore.KEY]
@@ -40,7 +41,7 @@ router
 
   .get('/publicKeys', async (req,res) =>{
     try{
-      const query = datastore.createQuery('Project').filter('private', '=', false).select('__key__')
+      const query = datastore.createQuery('Project').filter('private', '=', false).filter('users', '=', req.user.uid).select('__key__')
 
       const [projects] = await datastore.runQuery(query);
       let keys = []
@@ -76,7 +77,7 @@ router
   .get('/childrenKeys', async (req,res) => {
     try{
       let ancestorKey =  req.params.key
-      const query = datastore.createQuery('Project').hasAncestor(ancestorKey).select('__key__')
+      const query = datastore.createQuery('Project').hasAncestor(ancestorKey).filter('users', '=', req.user.uid).select('__key__')
 
       const [projects] = await datastore.runQuery(query);
       const keys = projects.map(el => el[datastore.KEY])
@@ -133,43 +134,61 @@ router
 
   .post('/', async (req,res) => {
     try{
-      
+
       const project = [
         {
           name:'thumbnail',
-          value:req.body.thumbnail,
+          value:req.body.project.thumbnail,
           excludeFromIndexes:true
         },
         {
           name:"description",
-          value:req.body.description,
+          value:req.body.project.description,
         },
         {
           name:"end_date",
-          value:req.body.end_date,
+          value:req.body.project.end_date,
         },
         {
           name:"start_date",
-          value:req.body.start_date,
+          value:req.body.project.start_date,
         },
         {
           name:"private",
-          value:req.body.private,
+          value:req.body.project.private,
         },
         {
           name:"owners",
-          value:req.body.owners,
+          value:req.body.project.owners,
         },
         {
           name:"users",
-          value:req.body.users
+          value:req.body.project.users
         },
         {
           name:"title",
-          value:req.body.title
+          value:req.body.project.title
+        },
+        {
+          name:"guests",
+          value:req.body.project.guests
         }
       ]
-      const key = datastore.key('Project')
+
+      const path = req.body.team.key.path
+
+      let formatted_path = [] // Parse string of project or task number 
+      path.forEach(el => {
+        if (!isNaN(el)){ // if element is a number
+          el = parseInt(el)
+        }
+        formatted_path.push(el)
+      })
+     
+
+      formatted_path.push('Project')
+      const key = datastore.key(formatted_path)
+
       const entity = {key: key, data: project}
 
       await datastore.upsert(entity)
@@ -243,5 +262,40 @@ router
       res.status(500).send('Internal server error')
     }
   })
+
+  .delete('/', async(req,res) => {
+    try{
+      let project = req.body.project
+     
+
+      let formatted_path = [] // Parse string of project or task number 
+      let path = project.key.path
+      path.forEach(el => {
+        if (!isNaN(el)){ // if element is a number
+          el = parseInt(el)
+        }
+        formatted_path.push(el)
+      })
+      let key = datastore.key(formatted_path)
+      project.key.path = formatted_path
+
+      const query = datastore.createQuery('Task').hasAncestor(key)
+      const [childTasks] = await datastore.runQuery(query);
+      childTasks.forEach(async el => {
+        let key = el[datastore.KEY]
+        await datastore.delete(key);
+      })
+
+      await datastore.delete(project.key)
+
+    res.sendStatus(200)
+    }
+    catch(err){
+      console.log(err)
+      res.status(500).send('Internal server error')
+    }
+  })
+  
+  
 
 module.exports = router;
