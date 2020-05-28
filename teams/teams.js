@@ -22,16 +22,16 @@ router
     }
   })
 
-  .post('/children', async (req,res) =>{ // is batch request
+  .post('/children', async (req,res) =>{ // is batch request. Input is array of teams
     try{
       let teams = req.body
       let returnData = []
+      let returnDataIds = []
 
       for(team of teams){
         let ancestorKey = team.key
         const query = datastore.createQuery('Project').hasAncestor(ancestorKey);
         const [projects] = await datastore.runQuery(query);
-        console.log(team)
       
         projects.forEach(el => {
           el.key = el[datastore.KEY]
@@ -42,12 +42,31 @@ router
   
           if(el.private == true && el.users.includes(req.user.uid)){  // Private project that requesting users is assigned to
             returnData.push(el)
+            returnDataIds.push(el.key.id)
           } 
 
           else if(el.private == false){ // Public projects
             returnData.push(el)
+            returnDataIds.push(el.key.id)
           }
         })
+      }
+
+      // Guest projects
+      const query = datastore.createQuery('Projects').filter('guests','=',req.user.uid)
+      const [guestProjects] = await datastore.runQuery(query)
+
+      for(project of guestProjects){
+        if( ! returnDataIds.includes(project.key.id)){ // ensure there is no duplicates
+         
+          project.key = el[datastore.KEY]
+          project.team = {
+            title:"Guest",
+            key:null
+          }
+          returnData.push(project)
+
+        }
       }
 
       res.send(returnData)

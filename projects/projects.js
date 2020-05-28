@@ -253,7 +253,6 @@ router
 
       const entity = {key: key, data:project}
 
-      console.log(entity)
       await datastore.update(entity);
       res.sendStatus(200)
     }

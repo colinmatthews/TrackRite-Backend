@@ -41,6 +41,32 @@ router
     }
   })
 
+  .post('/batch', async (req,res) =>{
+    try{
+
+      let uids = req.body
+      let entities = []
+
+      console.log(uids)
+
+      for(let uid of uids){
+        const query = datastore.createQuery('User').filter('uid','=',uid)
+        const [user] = await datastore.runQuery(query);
+        user.forEach(el => {
+          el.key = el[datastore.KEY]
+        })
+        console.log()
+        entities.push(user[0])
+      }
+      console.log(entities)
+      res.send(entities)
+    }
+    catch(err){
+      console.log(err)
+      res.status(500).send('Internal server error')
+    }
+  })
+
   .post('/', async (req,res) =>{
     try{
       
