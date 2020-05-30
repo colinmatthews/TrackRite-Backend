@@ -89,12 +89,54 @@ router
     }
   })
 
+  .delete('/', async(req,res) => {
+    try{
+      let team = req.body.team
+
+      let formatted_path = [] // Parse string of project or task number 
+      let path = team.key.path
+      path.forEach(el => {
+        if (!isNaN(el)){ // if element is a number
+          el = parseInt(el)
+        }
+        formatted_path.push(el)
+      })
+
+      let teamKey = datastore.key(formatted_path)
+      team.key.path = formatted_path
+
+      const query = datastore.createQuery('Project').hasAncestor(teamKey)
+      const [childProjects] = await datastore.runQuery(query); // find all child projects
+      childProjects.forEach(async el => {
+        let projectKey = el[datastore.KEY]
+        
+        const taskQuery = datastore.createQuery('Task').hasAncestor(projectKey)
+        const [childTasks] = await datastore.runQuery(query); // find all grandchild tasks
+        
+        childTasks.forEach(async el => {
+          let taskKey = el[datastore.KEY]
+          await datastore.delete(taskKey); // delete tasks
+        })
+        await datastore.delete(projectKey); // delete projects
+      })
+
+      await datastore.delete(team.key) // delete team
+
+    res.sendStatus(200)
+    }
+    catch(err){
+      console.log(err)
+      res.status(500).send('Internal server error')
+    }
+  })
+  
+
   .post('/', async (req,res) =>{
     try{
     const team = [
       {
         name:'users',
-        value:req.body.users,
+        value:[req.user.uid],
       },
       {
         name:"title",
@@ -103,6 +145,10 @@ router
       {
         name:"archive",
         value:false,
+      },
+      {
+        name:"owner",
+        value:req.user.uid
       },
     ]
     const key = datastore.key('Team')
